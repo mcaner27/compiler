@@ -1,0 +1,30 @@
+/* B-Minor Scanner Test File */
+
+// 1. Normal expressions and valid tokens
+x: integer = 5;
+b: boolean = true;
+s: string = "hello \n world";
+c: char = 'A';
+
+f: function integer (a: integer) = {
+    if (a >= 10 && a != 20) {
+        a++;
+    }
+    return a * 2 + (10 % 3);
+}
+
+/* -----------------------------------------
+   TRICKY CORNER CASES (Error Recovery)
+   ----------------------------------------- */
+
+// 2. Unknown characters (not in B-Minor)
+@ # $ 
+
+// 3. Invalid char (must be a single character)
+invalid_char: char = 'xx'; 
+
+// 4. Unterminated String 
+broken_string: string = "I have no end
+
+// 5. Unterminated block comment (Must be at the very end)
+/* This comment never ends...
