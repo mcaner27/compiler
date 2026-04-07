@@ -1,0 +1,7 @@
+x: integer;
+y: integer = 5;
+
+main: function integer () = {
+    print "hello\n", y;
+    return 0;
+}
