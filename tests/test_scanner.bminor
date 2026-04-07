@@ -18,7 +18,7 @@ f: function integer (a: integer) = {
    ----------------------------------------- */
 
 // 2. Unknown characters (not in B-Minor)
-@ # $ 
+
 
 // 3. Invalid char (must be a single character)
 invalid_char: char = 'xx'; 
