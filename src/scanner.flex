@@ -1,23 +1,22 @@
 %{
 /*
  * CEN417 - B-Minor Scanner
- * Parser ile uyumlu sürüm
+ * Parser + AST + Resolve + Typecheck uyumlu sürüm
  */
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "parser.tab.h"
 
 extern FILE *yyin;
 %}
 
-/* Flex Options */
 %option noyywrap
 %option yylineno
 %option nounput
 %option noinput
 
-/* Regex Definitions */
 DIGIT      [0-9]
 LETTER     [a-zA-Z]
 ID         ({LETTER}|_)({LETTER}|{DIGIT}|_)*
@@ -81,9 +80,16 @@ STR_BODY   ([^\\\"\n]|{ESCAPE})*
 "!"                                 { return TOKEN_LOGICAL_NOT; }
 "="                                 { return TOKEN_ASSIGN; }
 
-{DIGIT}+                            { return TOKEN_INTEGER_LITERAL; }
+{DIGIT}+                            {
+                                        yylval.number = atoi(yytext);
+                                        return TOKEN_INTEGER_LITERAL;
+                                    }
 
-\'{CHAR_BODY}\'                     { return TOKEN_CHARACTER_LITERAL; }
+\'{CHAR_BODY}\'                     {
+                                        yylval.text = strdup(yytext);
+                                        return TOKEN_CHARACTER_LITERAL;
+                                    }
+
 \'[^\']*\'                          {
                                         fprintf(stderr, "SCAN ERROR: Invalid character literal %s at line %d\n", yytext, yylineno);
                                         return TOKEN_ERROR;
@@ -94,6 +100,7 @@ STR_BODY   ([^\\\"\n]|{ESCAPE})*
                                             fprintf(stderr, "SCAN ERROR: String literal too long at line %d\n", yylineno);
                                             return TOKEN_ERROR;
                                         }
+                                        yylval.text = strdup(yytext);
                                         return TOKEN_STRING_LITERAL;
                                     }
 
@@ -107,6 +114,7 @@ STR_BODY   ([^\\\"\n]|{ESCAPE})*
                                             fprintf(stderr, "SCAN ERROR: Identifier too long (%s) at line %d\n", yytext, yylineno);
                                             return TOKEN_ERROR;
                                         }
+                                        yylval.text = strdup(yytext);
                                         return TOKEN_IDENTIFIER;
                                     }
 

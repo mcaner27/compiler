@@ -1,0 +1,9 @@
+x: integer = "hello";
+
+main: function integer () = {
+    if (5) {
+        return "abc";
+    }
+
+    return 0;
+}
