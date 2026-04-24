@@ -2,15 +2,15 @@
 parser
 test_out
 
-# Bison/Flex ürettiği dosyalar (kaynak olarak saklanıyor)
+# Bison/Flex 
 # src/parser.tab.c
 # src/parser.tab.h
 # src/lex.yy.c
 
-# Assembly çıktısı
+# Assembly 
 output.s
 
-# Geçici test scriptleri
+# Geçici test 
 test_global.sh
 run_runtime_tests.sh
 
