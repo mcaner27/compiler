@@ -1,0 +1,6 @@
+main: function integer () = {
+    a: array [5] integer;
+    a[0] = 10;
+    a[1] = 20;
+    return a[0];
+}

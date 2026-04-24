@@ -26,6 +26,7 @@ typedef enum {
     STMT_IF,
     STMT_IF_ELSE,
     STMT_FOR,
+    STMT_WHILE,
     STMT_BLOCK,
     STMT_EXPR
 } stmt_kind;
@@ -69,6 +70,8 @@ typedef struct ASTNode {
     char *name;
     char *string_value;
     int int_value;
+    int is_global;   /* 1 if this is a global declaration */
+    int local_slot;  /* stack slot index for locals (-1 = unassigned) */
 
     struct ASTNode *left;
     struct ASTNode *right;

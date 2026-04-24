@@ -142,6 +142,18 @@ function_decl
                 $4->next = $6;
             }
         }
+    | TOKEN_IDENTIFIER TOKEN_COLON TOKEN_FUNCTION return_type TOKEN_LPAREN param_list_opt TOKEN_RPAREN TOKEN_SEMICOLON
+        {
+            /* Function prototype: no body */
+            $$ = create_node(NODE_FUNCTION);
+            $$->name = $1;
+            $$->left = $4;
+            $$->right = NULL;  /* NULL body marks this as prototype */
+
+            if ($6 != NULL && $4 != NULL) {
+                $4->next = $6;
+            }
+        }
     ;
 
 return_type
@@ -312,6 +324,13 @@ statement
             } else {
                 $$->third = $9;
             }
+        }
+    | TOKEN_WHILE TOKEN_LPAREN expr TOKEN_RPAREN statement
+        {
+            $$ = create_node(NODE_STATEMENT);
+            $$->stmt_kind_val = STMT_WHILE;
+            $$->left = $3;
+            $$->right = $5;
         }
     | declaration
         {

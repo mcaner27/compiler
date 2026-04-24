@@ -1,0 +1,6 @@
+main: function integer () = {
+    x: integer = 17;
+    y: integer = 5;
+    z: integer = x % y;
+    return z;
+}

@@ -14,6 +14,8 @@ ASTNode *create_node(node_type type)
     node->name = NULL;
     node->string_value = NULL;
     node->int_value = 0;
+    node->is_global = 0;
+    node->local_slot = -1;
 
     node->left = NULL;
     node->right = NULL;
@@ -22,6 +24,7 @@ ASTNode *create_node(node_type type)
 
     return node;
 }
+
 static void print_indent(int level)
 {
     for (int i = 0; i < level; i++) {
@@ -32,13 +35,13 @@ static void print_indent(int level)
 static const char *node_type_to_string(node_type type)
 {
     switch (type) {
-        case NODE_PROGRAM: return "PROGRAM";
+        case NODE_PROGRAM:     return "PROGRAM";
         case NODE_DECLARATION: return "DECLARATION";
-        case NODE_FUNCTION: return "FUNCTION";
-        case NODE_STATEMENT: return "STATEMENT";
-        case NODE_EXPRESSION: return "EXPRESSION";
-        case NODE_TYPE: return "TYPE";
-        default: return "UNKNOWN";
+        case NODE_FUNCTION:    return "FUNCTION";
+        case NODE_STATEMENT:   return "STATEMENT";
+        case NODE_EXPRESSION:  return "EXPRESSION";
+        case NODE_TYPE:        return "TYPE";
+        default:               return "UNKNOWN";
     }
 }
 
@@ -82,11 +85,19 @@ static void print_type_node(ASTNode *node)
         return;
     }
 
-    /* Şimdilik parser type node'larında detay tutulmuyor */
-    printf("type");
+    switch (node->type_kind_val) {
+        case TYPE_INTEGER: printf("integer"); break;
+        case TYPE_BOOLEAN: printf("boolean"); break;
+        case TYPE_CHAR:    printf("char");    break;
+        case TYPE_STRING:  printf("string");  break;
+        case TYPE_VOID:    printf("void");    break;
+        default:           printf("unknown"); break;
+    }
 }
 
 static void print_expr(ASTNode *node);
+static void print_statement(ASTNode *node, int indent);
+static void print_declaration(ASTNode *node, int indent);
 
 static void print_expr_list(ASTNode *node)
 {
@@ -117,8 +128,13 @@ static void print_expr(ASTNode *node)
             break;
 
         case EXPR_STRING_LITERAL:
-            if (node->string_value != NULL) printf("\"%s\"", node->string_value);
-            else printf("\"string\"");
+            if (node->string_value != NULL) printf("%s", node->string_value);
+            else printf("\"\"");
+            break;
+
+        case EXPR_CHAR_LITERAL:
+            if (node->string_value != NULL) printf("%s", node->string_value);
+            else printf("'?'");
             break;
 
         case EXPR_BOOLEAN_LITERAL:
@@ -256,15 +272,17 @@ static void print_expr(ASTNode *node)
     }
 }
 
-static void print_statement(ASTNode *node, int indent);
-
 static void print_block(ASTNode *node, int indent)
 {
     printf("{\n");
 
     ASTNode *stmt = node;
     while (stmt != NULL) {
-        print_statement(stmt, indent + 1);
+        if (stmt->type == NODE_DECLARATION) {
+            print_declaration(stmt, indent + 1);
+        } else if (stmt->type == NODE_STATEMENT) {
+            print_statement(stmt, indent + 1);
+        }
         stmt = stmt->next;
     }
 
@@ -284,7 +302,7 @@ static void print_declaration(ASTNode *node, int indent)
     if (node->left != NULL) {
         print_type_node(node->left);
     } else {
-        printf("type");
+        printf("unknown");
     }
 
     if (node->right != NULL) {
@@ -307,10 +325,23 @@ static void print_function(ASTNode *node, int indent)
     if (node->left != NULL) {
         print_type_node(node->left);
     } else {
-        printf("type");
+        printf("unknown");
     }
 
-    printf(" () = ");
+    printf(" (");
+    if (node->left != NULL && node->left->next != NULL) {
+        ASTNode *param = node->left->next;
+        int first = 1;
+        while (param != NULL) {
+            if (!first) printf(", ");
+            if (param->name != NULL) printf("%s", param->name);
+            printf(": ");
+            print_type_node(param->left);
+            first = 0;
+            param = param->next;
+        }
+    }
+    printf(") = ");
 
     if (node->right != NULL && node->right->stmt_kind_val == STMT_BLOCK) {
         print_block(node->right->left, indent);
@@ -376,7 +407,6 @@ static void print_statement(ASTNode *node, int indent)
                 printf("\n");
                 print_statement(node->right, indent + 1);
             }
-
             print_indent(indent);
             printf("else ");
             if (node->third != NULL && node->third->stmt_kind_val == STMT_BLOCK) {
@@ -384,6 +414,19 @@ static void print_statement(ASTNode *node, int indent)
             } else {
                 printf("\n");
                 print_statement(node->third, indent + 1);
+            }
+            break;
+
+        case STMT_WHILE:
+            print_indent(indent);
+            printf("while (");
+            print_expr(node->left);
+            printf(") ");
+            if (node->right != NULL && node->right->stmt_kind_val == STMT_BLOCK) {
+                print_block(node->right->left, indent);
+            } else {
+                printf("\n");
+                print_statement(node->right, indent + 1);
             }
             break;
 
@@ -396,7 +439,6 @@ static void print_statement(ASTNode *node, int indent)
             printf("; ");
             if (node->third != NULL) print_expr(node->third);
             printf(") ");
-
             if (node->third != NULL && node->third->next != NULL &&
                 node->third->next->stmt_kind_val == STMT_BLOCK) {
                 print_block(node->third->next->left, indent);
@@ -409,8 +451,6 @@ static void print_statement(ASTNode *node, int indent)
             break;
 
         default:
-            print_indent(indent);
-            printf("/* unknown statement */\n");
             break;
     }
 }
@@ -434,8 +474,6 @@ void print_pretty(ASTNode *node, int indent)
                 break;
 
             default:
-                print_indent(indent);
-                printf("/* unsupported node */\n");
                 break;
         }
 

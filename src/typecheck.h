@@ -2,6 +2,7 @@
 #define TYPECHECK_H
 
 #include "ast.h"
+#include "symbol.h"
 
 typedef enum {
     CHECK_TYPE_UNKNOWN,
@@ -15,6 +16,7 @@ typedef enum {
 
 check_type expr_type(ASTNode *node);
 void typecheck_ast(ASTNode *node);
+void typecheck_ast_with_scope(ASTNode *node, Scope *scope);
 int typecheck_error_count(void);
 
 #endif

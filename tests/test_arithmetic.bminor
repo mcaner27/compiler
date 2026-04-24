@@ -1,0 +1,6 @@
+main: function integer () = {
+    x: integer = 10;
+    y: integer = 3;
+    z: integer = x + y * 2 - 4 / 2;
+    return z;
+}

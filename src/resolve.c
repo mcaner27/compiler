@@ -62,6 +62,11 @@ static void resolve_stmt(ASTNode *node, Scope *scope)
             resolve_stmt(node->right, scope);
             break;
 
+        case STMT_WHILE:
+            resolve_expr(node->left, scope);
+            resolve_stmt(node->right, scope);
+            break;
+
         case STMT_IF_ELSE:
             resolve_expr(node->left, scope);
             resolve_stmt(node->right, scope);
@@ -161,6 +166,23 @@ void resolve_ast(ASTNode *node)
     }
 
     scope_destroy(global);
+}
+
+Scope *resolve_and_return_scope(ASTNode *node)
+{
+    Scope *global = scope_create(NULL);
+    ASTNode *temp = node;
+
+    while (temp) {
+        if (temp->type == NODE_DECLARATION) {
+            resolve_decl(temp, global);
+        } else if (temp->type == NODE_FUNCTION) {
+            resolve_function(temp, global);
+        }
+        temp = temp->next;
+    }
+
+    return global;
 }
 
 int resolve_error_count(void)

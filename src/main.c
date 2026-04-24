@@ -4,6 +4,7 @@
 #include "typecheck.h"
 #include "resolve.h"
 #include "codegen.h"
+#include "symbol.h"
 
 extern FILE *yyin;
 int yyparse(void);
@@ -27,16 +28,16 @@ int main(int argc, char **argv)
         printf("root address: %p\n", (void*)root);
 
         if (root != NULL) {
-            printf("AST created successfully.\n");
+            printf("AST created successfully.\n\n");
 
-            printf("\n=== AST OUTPUT ===\n");
+            printf("=== AST OUTPUT ===\n");
             print_ast(root, 0);
 
             printf("\n=== PRETTY PRINT OUTPUT ===\n");
             print_pretty(root, 0);
 
             printf("\n=== RESOLVE ===\n");
-            resolve_ast(root);
+            Scope *global_scope = resolve_and_return_scope(root);
             if (resolve_error_count() == 0) {
                 printf("Name resolution successful. No resolve errors found.\n");
             } else {
@@ -44,7 +45,7 @@ int main(int argc, char **argv)
             }
 
             printf("\n=== TYPE CHECK ===\n");
-            typecheck_ast(root);
+            typecheck_ast_with_scope(root, global_scope);
             if (typecheck_error_count() == 0) {
                 printf("Type checking successful. No type errors found.\n");
             } else {
@@ -56,11 +57,18 @@ int main(int argc, char **argv)
                 codegen_program(root, "output.s");
                 printf("Assembly written to output.s\n");
             }
+
+            scope_destroy(global_scope);
         }
     } else {
         printf("Parsing failed.\n");
     }
 
     fclose(yyin);
+    
+    if (resolve_error_count() > 0 || typecheck_error_count() > 0) {
+        return 1;
+    }
+    
     return 0;
 }
